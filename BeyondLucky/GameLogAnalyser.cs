@@ -1,10 +1,7 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -43,11 +40,13 @@ namespace BeyondLucky
             HtmlNode tableDataNode0 = tableRowNode.ChildNodes.First(x => x.Name == "td");
             string rollName = tableDataNode0.InnerText;
 
+            // TODO
             if (rollName == "Source") // Spells that show their descriptions either don't matter or are harder to handle
             {
                 return;
             }
 
+            // TODO
             if (rollName == "Save") // TODO: handle attacks/abilities that have a saving throw
             {
                 return;
@@ -58,7 +57,7 @@ namespace BeyondLucky
             string diceRollText = spanNode.Attributes[TitleAttribute].Value;
 
 
-            if (characterName == "Ellli Dee")// Ugly hack...
+            if (characterName == "Ellli Dee") // Ugly hack... don't know what happened there...
             {
                 characterName = "Elli Dee";
             }
@@ -70,29 +69,7 @@ namespace BeyondLucky
                 CharacterRollsTotals[characterName] = character;
             }
 
-            character.AddRoll(rollName, diceRollText); // TODO: Fill data structure!
-        }
-
-        private void ExportWithCsvWriter(string filePath)
-        {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-
-            CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture);
-            config.Delimiter = ",";
-            config.HasHeaderRecord = true;
-
-            using (FileStream fileStream = File.Create(filePath))
-            using (StreamWriter writer = new StreamWriter(fileStream))
-            using (CsvWriter csvWriter = new CsvWriter(writer, config))
-            {
-                csvWriter.WriteHeader(typeof(Character));
-                csvWriter.WriteRecords(CharacterRollsTotals.Values);
-
-                writer.Flush();
-            }
+            character.AddRoll(rollName, diceRollText);
         }
 
         public void ExportStats(string filePath)
@@ -102,6 +79,7 @@ namespace BeyondLucky
                 File.Delete(filePath);
             }
             
+            // TODO: 
             using (StreamWriter streamWriter = new StreamWriter(filePath, true))
             {
                 foreach (DataTable dataTable in ConvertToDataSet().Tables)
@@ -124,6 +102,7 @@ namespace BeyondLucky
                 dataTable.Columns.Add("Crits", typeof(int));
                 dataTable.Columns.Add("Fumbles", typeof(int));
                 dataTable.Columns.Add("RollsMade", typeof(int));
+                dataTable.Columns.Add("Formula", typeof(string));
 
                 foreach (KeyValuePair<string, RollType> rollType in character.RollsTotals)
                 {
@@ -136,6 +115,7 @@ namespace BeyondLucky
                         rollType.Value.NumberOfCrits, // Crits
                         rollType.Value.NumberOfFumbles, // Fumbles
                         rollType.Value.NumberOfRolls, // RollsMade
+                        rollType.Value.Formula // Formula
                     };
 
                     dataTable.Rows.Add(row);

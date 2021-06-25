@@ -4,13 +4,14 @@
     {
         public int MaximumRoll { get; }
         public int MinimumRoll { get; }
+        public string Formula { get; }
 
         public int NumberOfRolls { get; private set; }
         public int TotalAccumulated { get; private set; }
         public int NumberOfCrits { get; private set; }
         public int NumberOfFumbles { get; private set; }
 
-        public RollType(int minimumRoll, int maximumRoll)
+        public RollType(int minimumRoll, int maximumRoll, string formula)
         {
             MaximumRoll = maximumRoll;
             MinimumRoll = minimumRoll;
@@ -18,6 +19,7 @@
             TotalAccumulated = 0;
             NumberOfCrits = 0;
             NumberOfFumbles = 0;
+            Formula = formula;
         }
 
         public void AddResult(int result)
