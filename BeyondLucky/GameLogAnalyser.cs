@@ -15,7 +15,13 @@ namespace BeyondLucky
         private const string DivNode = "div";
         private const string RollTemplateClassName = "sheet-rolltemplate-default";
 
-        private Dictionary<string, Character> CharacterRollsTotals = new Dictionary<string, Character>();
+        private Dictionary<string, Character> _characterRollsTotals = new Dictionary<string, Character>();
+        private HashSet<string> _playerCharacterNames;
+
+        public GameLogAnalyser(HashSet<string> playerCharacterNames)
+        {
+            _playerCharacterNames = playerCharacterNames;
+        }
 
         public void Analyse(string chatLogFilePath)
         {
@@ -35,20 +41,26 @@ namespace BeyondLucky
             HtmlNode tableNode = divNode.ChildNodes.First(x => x.Name == "table");
             HtmlNode captionNode = tableNode.ChildNodes.First(x => x.Name == "caption");
             string characterName = captionNode.InnerText;
+
+            if (characterName == "Ellli Dee") // Ugly hack... don't know what happened there...
+            {
+                characterName = "Elli Dee";
+            }
+
             HtmlNode bodyNode = tableNode.ChildNodes.First(x => x.Name == "tbody");
             HtmlNode tableRowNode = bodyNode.ChildNodes.First(x => x.Name == "tr");
             HtmlNode tableDataNode0 = tableRowNode.ChildNodes.First(x => x.Name == "td");
             string rollName = tableDataNode0.InnerText;
 
-            // TODO
-            if (rollName == "Source") // Spells that show their descriptions either don't matter or are harder to handle
+            if (rollName == "Source")
             {
+                ParseSourceRoll();
                 return;
             }
 
-            // TODO
-            if (rollName == "Save") // TODO: handle attacks/abilities that have a saving throw
+            if (rollName == "Save")
             {
+                ParseSaveRoll();
                 return;
             }
 
@@ -56,17 +68,28 @@ namespace BeyondLucky
             HtmlNode spanNode = tableDataNode1.ChildNodes.First(x => x.Name == "span");
             string diceRollText = spanNode.Attributes[TitleAttribute].Value;
 
+            AddRoll(characterName, rollName, diceRollText);
+        }
 
-            if (characterName == "Ellli Dee") // Ugly hack... don't know what happened there...
-            {
-                characterName = "Elli Dee";
-            }
+        private void ParseSaveRoll()
+        {
+            // TODO
+            AddRoll(characterName, rollName, diceRollText);
+        }
 
+        private void ParseSourceRoll()
+        {
+            // TODO
+            AddRoll(characterName, rollName, diceRollText);
+        }
+
+        private void AddRoll(string characterName, string rollName, string diceRollText)
+        {
             Character character;
-            if (!CharacterRollsTotals.TryGetValue(characterName, out character))
+            if (!_characterRollsTotals.TryGetValue(characterName, out character))
             {
                 character = new Character(characterName);
-                CharacterRollsTotals[characterName] = character;
+                _characterRollsTotals[characterName] = character;
             }
 
             character.AddRoll(rollName, diceRollText);
@@ -79,7 +102,7 @@ namespace BeyondLucky
                 File.Delete(filePath);
             }
             
-            // TODO: 
+            // TODO: Add "artificial" row that is "scaled average"
             using (StreamWriter streamWriter = new StreamWriter(filePath, true))
             {
                 foreach (DataTable dataTable in ConvertToDataSet().Tables)
@@ -92,7 +115,7 @@ namespace BeyondLucky
         private DataSet ConvertToDataSet()
         {
             DataSet dataSet = new DataSet("DiceStats");
-            foreach (Character character in CharacterRollsTotals.Values)
+            foreach (Character character in _characterRollsTotals.Values)
             {
                 DataTable dataTable = new DataTable(character.Name);
 
